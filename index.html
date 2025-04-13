@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QZXC1QZC4X"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+    
+      gtag('config', 'G-QZXC1QZC4X');
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Video Player</title>
+    
+    <!-- Shaka Player Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.3.5/shaka-player.compiled.js"></script>
+    
+    <style>
+        /* Full Black Background */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Telegram Button Styling */
+        .telegram-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #0088cc;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin-bottom: 15px;
+            box-shadow: 0px 0px 10px rgba(0, 136, 204, 0.5);
+        }
+
+        .telegram-btn img {
+            width: 20px;
+            margin-right: 10px;
+        }
+
+        /* Video Container - Slightly Smaller to Show Edges */
+        .video-container {
+            width: 98vw;
+            height: 55.25vw;
+            max-height: 100vh;
+            border: 3px solid #007BFF;
+            box-shadow: 0px 0px 20px rgba(0, 123, 255, 0.5);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Video Player Styling */
+        #videoPlayer {
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            background-color: #000;
+        }
+
+        /* Custom Controls - Optional */
+        .custom-controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .video-container:hover .custom-controls {
+            opacity: 1;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #007BFF;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Error Message */
+        .error-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background: rgba(255, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+            max-width: 80%;
+        }
+
+        /* Join Telegram Button */
+        .join-btn {
+            background: linear-gradient(to right, #007BFF, #0044CC);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            margin-top: 15px;
+            box-shadow: 0px 0px 10px rgba(0, 123, 255, 0.5);
+        }
+
+        /* Popup Style */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .popup-content {
+            background: #222;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            width: 75%;
+            max-width: 260px;
+            position: relative;
+        }
+
+        .popup-content h2 {
+            margin: 0 0 8px;
+            font-size: 18px;
+            color: #4da3ff;
+        }
+
+        .popup-content p {
+            font-size: 14px;
+            margin: 8px 0;
+        }
+
+        .popup-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .popup-buttons button {
+            padding: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .join-btn-popup {
+            background: #4da3ff;
+            color: white;
+            border-radius: 5px;
+        }
+
+        .already-btn {
+            background: #444;
+            color: white;
+            border-radius: 5px;
+        }
+
+        /* Clickable Telegram Link */
+        .telegram-link {
+            color: #4da3ff;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* Golden Glow Effect for Second Popup */
+        #customPopup .popup-content {
+            border: 3px solid #FFD700;
+            box-shadow: 0px 0px 15px rgba(255, 215, 0, 0.8);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Telegram Channel Button -->
+    <a href="https://t.me/+3DeWZl3UhKgxMDI1" class="telegram-btn">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.5 2l-19 19'/%3E%3Cpath d='M21.5 2v12.5H9'/%3E%3C/svg%3E" alt="Telegram Logo">
+        Cric News Point 
+    </a>
+
+    <!-- Video Player (Slightly Smaller to Show Border Edges) -->
+    <div class="video-container">
+        <video id="videoPlayer" controls></video>
+        <div class="spinner" id="loadingSpinner"></div>
+        <div class="error-message" id="errorDisplay"></div>
+    </div>
+
+    <!-- Join Telegram Button -->
+    <a href="https://t.me/+3DeWZl3UhKgxMDI1" class="join-btn">Join Telegram</a>
+
+    <!-- Second Popup -->
+    <div class="popup" id="customPopup">
+        <div class="popup-content">
+            <h2>Support Us!</h2>
+            <p>Join our Telegram channel <a href="https://t.me/+3DeWZl3UhKgxMDI1" class="telegram-link">Cric News Point</a> for more updates.</p>
+            <div class="popup-buttons">
+                <button class="join-btn-popup" onclick="window.location.href='https://t.me/+3DeWZl3UhKgxMDI1'">Join Now</button>
+                <button class="already-btn" onclick="closePopup()">Already Joined</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Shaka Player
+        document.addEventListener('DOMContentLoaded', function() {
+            // Install polyfills for older browsers
+            shaka.polyfill.installAll();
+            
+            // Show loading spinner
+            const spinner = document.getElementById('loadingSpinner');
+            spinner.style.display = 'block';
+            
+            // Video source and DRM configuration
+            const manifestUri = 'https://linearjitp-playback.astro.com.my/dash-wv/linear/408/default_ott.mpd';
+               drm: {
+                clearkey: {
+            const keyId = '1a655189ab5c49eb235308c2b1a9e710';
+            const key = '3c4508af348844107f5e026a4fd6b16e';
+
+            // Check for browser support
+            if (!shaka.Player.isBrowserSupported()) {
+                showError('Browser not supported for this player! Please try Chrome, Firefox, or Edge.');
+                return;
+            }
+
+            // Initialize player
+            const video = document.getElementById('videoPlayer');
+            const player = new shaka.Player(video);
+            
+            // Listen for errors
+            player.addEventListener('error', function(event) {
+                const error = event.detail;
+                console.error('Error code:', error.code, 'message:', error.message, 'data:', error);
+                showError('Error ' + error.code + ': ' + error.message);
+            });
+
+            // Configure DRM with improved settings
+            player.configure({
+                streaming: {
+                    bufferingGoal: 60,  // Increase buffer size to 60 seconds
+                    rebufferingGoal: 15, // Start playback when we have 15 seconds buffered
+                    bufferBehind: 30,    // Keep 30 seconds of content in the buffer
+                    retryParameters: {
+                        maxAttempts: 5,  // Try more times before giving up
+                        baseDelay: 1000, // Start with a 1 second delay between retries
+                        maxDelay: 8000,  // Maximum delay between retries
+                        timeout: 30000   // 30 second timeout for network requests
+                    }
+                },
+                drm: {
+                    // ClearKey configuration
+                    clearKeys: {
+                        // Format the key properly - ensure it's in lowercase
+                        [keyId.toLowerCase()]: key.toLowerCase()
+                    },
+                    // Try with both Widevine and ClearKey
+                    servers: {
+                        'com.widevine.alpha': 'https://mrpw.ptmnc01.verspective.net/?deviceId=OTFmNDAwZWEtZjI5OC0zNTAzLWE0NzktZWI2NGIxMjRmMGFm',
+                        'org.w3.clearkey': 'https://clearkey-base64-2-hex-json.herokuapp.com/api/'
+                    },
+                    // Additional DRM settings for troubleshooting
+                    advanced: {
+                        'com.widevine.alpha': {
+                            videoRobustness: '',
+                            audioRobustness: ''
+                        }
+                    },
+                    serverCertificateExpiryTime: 3600
+                },
+                manifest: {
+                    dash: {
+                        ignoreMinBufferTime: true, // Ignore buffer time recommendation from manifest
+                        clockSyncUri: '//time.google.com',
+                        ignoreSuggestedPresentationDelay: true
+                    }
+                }
+            });
+            
+            // Try with alternate ways to configure ClearKey
+            function tryAlternativeDrmApproach() {
+                console.log("Trying alternative DRM approach");
+                // Try using the EME API directly as a fallback
+                const licenseServer = {
+                    "org.w3.clearkey": {
+                        "clearkeys": {
+                            [keyId]: key
+                        }
+                    }
+                };
+                
+                player.configure('drm.servers', licenseServer);
+                
+                // Try to load with the new configuration
+                return player.load(manifestUri);
+            }
+
+            // Try to load the video
+            player.load(manifestUri).then(function() {
+                console.log('Video loaded successfully');
+                spinner.style.display = 'none';
+                
+                // Start playback automatically
+                video.play().catch(e => {
+                    console.warn('Autoplay was prevented:', e);
+                    showError('Click to play video (Autoplay blocked by browser)');
+                });
+            }).catch(function(error) {
+                console.error('Initial load failed:', error);
+                
+                // Try alternative approach if first attempt fails
+                tryAlternativeDrmApproach().then(function() {
+                    console.log('Video loaded with alternative approach');
+                    spinner.style.display = 'none';
+                    video.play().catch(e => {
+                        console.warn('Autoplay was prevented:', e);
+                        showError('Click to play video (Autoplay blocked by browser)');
+                    });
+                }).catch(function(finalError) {
+                    // If all attempts fail
+                    spinner.style.display = 'none';
+                    console.error('All loading attempts failed:', finalError);
+                    
+                    // Try a fallback video as last resort
+                    tryFallbackVideo();
+                });
+            });
+            
+            // Fallback to a free test stream if everything else fails
+            function tryFallbackVideo() {
+                console.log("Trying fallback video");
+                // Load a fallback video that doesn't require DRM
+                const fallbackUri = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+                
+                player.configure({
+                    drm: {
+                        clearKeys: {}  // Clear previous DRM config
+                    }
+                });
+                
+                player.load(fallbackUri).then(function() {
+                    console.log('Fallback video loaded');
+                    showError('Original content unavailable. Playing test video instead.');
+                    spinner.style.display = 'none';
+                    video.play().catch(e => console.warn('Autoplay prevented:', e));
+                }).catch(function(error) {
+                    spinner.style.display = 'none';
+                    showError('All video loading attempts failed. Please try again later or with a different browser.');
+                    console.error('Fallback video failed:', error);
+                });
+            }
+
+            // Add unload handler
+            window.addEventListener('beforeunload', function() {
+                if (player) {
+                    player.destroy();
+                }
+            });
+        });
+
+        // Function to show error messages
+        function showError(message) {
+            const errorDisplay = document.getElementById('errorDisplay');
+            errorDisplay.textContent = message;
+            errorDisplay.style.display = 'block';
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        // First Popup (Browser Alert)
+        setTimeout(() => {
+            let firstPopup = confirm("Join Our Telegram Channel Cric News Point");
+            if (firstPopup) {
+                window.location.href = "https://t.me/+3DeWZl3UhKgxMDI1";
+            }
+            // Show Second Popup after the first one closes
+            setTimeout(() => {
+                document.getElementById("customPopup").style.display = "flex";
+            }, 500);
+        }, 1000);
+
+        // Close Second Popup
+        function closePopup() {
+            document.getElementById("customPopup").style.display = "none";
+        }
+    </script>
+</body>
+</html>
